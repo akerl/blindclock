@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blind Clock</title>
+</head>
+
+<body>
+    <div class="row">
+        <div id="timer"></div>
+    </div>
+    <div class="row">
+        <div class="column">
+            <div id="blinds"></div>
+        </div>
+        <div class="column">
+            <div id="clock"></div>
+        </div>
+    </div>
+</body>
+
+<script>
+const timerUrl = "/state";
+
+function concatZero(timeFrame) {
+  return timeFrame < 10 ? '0'.concat(timeFrame) : timeFrame
+}
+
+function updateClock(){
+    const d = new Date();
+    const h = d.getHours();
+    const m = d.getMinutes();
+    document.getElementById("clock").textContent = concatZero(h) + ":" + concatZero(m);
+}
+setInterval(updateClock, 1000);
+
+function updateTimer(){
+    fetch(timerUrl)
+    .then(data => {return data.json()})
+    .then(res => {
+        const d = new Date()
+        const t = Date.parse(res.timer);
+        var delta = Math.max((t - d) / 1000, 0);
+        var minutes = Math.floor(delta / 60) % 60;
+        delta -= minutes * 60;
+        var seconds = Math.floor(delta);
+        document.getElementById("timer").textContent = concatZero(minutes) + ":" + concatZero(seconds);
+        document.getElementById("blinds").textContent = res.small + " / " + res.big;
+    })
+    .catch(error => console.log(error))
+}
+setInterval(updateTimer, 1000);
+</script>
+</html>
