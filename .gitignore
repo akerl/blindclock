@@ -6,3 +6,4 @@
 /.tools/
 /Dockerfile
 /state.yml
+/config.yml

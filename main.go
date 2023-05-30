@@ -1,15 +1,25 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/ghodss/yaml"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/yaml.v2"
 )
 
-const stateFile = "state.yml"
+type config struct {
+	StateFile string `json:"state_file"`
+	SqsQueue  string `json:"sqs_queue"`
+}
 
 type state struct {
 	Timer     time.Time `json:"timer"`
@@ -21,10 +31,12 @@ type state struct {
 }
 
 type stateUpdate struct {
-	Interval int `form:"interval"`
-	Small    int `form:"small"`
-	Big      int `form:"big"`
+	Interval int `form:"interval" json:"interval"`
+	Small    int `form:"small" json:"small"`
+	Big      int `form:"big" json:"big"`
 }
+
+var conf config
 
 func (s *state) ToH() gin.H {
 	return gin.H{
@@ -36,7 +48,7 @@ func (s *state) ToH() gin.H {
 
 func readState() (state, error) {
 	var s state
-	contents, err := ioutil.ReadFile(stateFile)
+	contents, err := ioutil.ReadFile(conf.StateFile)
 	if err != nil {
 		return s, err
 	}
@@ -50,7 +62,7 @@ func writeState(s state) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(stateFile, contents, 0600)
+	return ioutil.WriteFile(conf.StateFile, contents, 0600)
 }
 
 func writeOrError(s state, c *gin.Context) {
@@ -137,7 +149,99 @@ func resume(c *gin.Context) {
 	writeOrError(s, c)
 }
 
+func loadConfig() error {
+	if len(os.Args) == 1 {
+		return fmt.Errorf("must provide config file path")
+	}
+	configFile := os.Args[1]
+
+	contents, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return err
+	}
+
+	return yaml.Unmarshal(contents, &conf)
+}
+
+func listenOnQueue() {
+	ctx := context.TODO()
+
+	cfg, err := awsConfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		panic("configuration error: " + err.Error())
+	}
+
+	client := sqs.NewFromConfig(cfg)
+
+	urlResult, err := client.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{QueueName: &conf.SqsQueue})
+	if err != nil {
+		panic("queue name error: " + err.Error())
+	}
+	queueURL := urlResult.QueueUrl
+
+	receiveInput := &sqs.ReceiveMessageInput{
+		MessageAttributeNames: []string{
+			string(types.QueueAttributeNameAll),
+		},
+		QueueUrl:            queueURL,
+		MaxNumberOfMessages: 1,
+		VisibilityTimeout:   60,
+	}
+
+	for {
+		time.Sleep(time.Second * 1)
+
+		res, err := client.ReceiveMessage(ctx, receiveInput)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "receive error: %s", err.Error())
+			continue
+		}
+
+		if res.Messages == nil {
+			continue
+		}
+
+		msg := res.Messages[0]
+		var su stateUpdate
+		err = json.Unmarshal([]byte(*msg.Body), &su)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "unmarshal error: %s", err.Error())
+			continue
+		}
+		s := state{
+			Timer:    time.Now().Add(time.Minute * time.Duration(su.Interval)),
+			Interval: su.Interval,
+			Small:    su.Small,
+			Big:      su.Big,
+		}
+		err = writeState(s)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "write error: %s", err.Error())
+			continue
+		}
+
+		deleteInput := &sqs.DeleteMessageInput{
+			QueueUrl:      queueURL,
+			ReceiptHandle: msg.ReceiptHandle,
+		}
+		if _, err = client.DeleteMessage(ctx, deleteInput); err != nil {
+			fmt.Fprintf(os.Stderr, "delete error: %s", err.Error())
+			continue
+		}
+	}
+}
+
 func main() {
+	err := loadConfig()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	if conf.SqsQueue != "" {
+		go listenOnQueue()
+	}
+
 	router := gin.Default()
 	router.StaticFile("/favicon.ico", "./public/favicon.ico")
 	router.StaticFile("/", "./public/index.html")
