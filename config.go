@@ -2,29 +2,26 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 
-	"github.com/ghodss/yaml"
+	"github.com/akerl/go-lambda/s3"
 )
 
 type config struct {
-	StateFile string `json:"state_file"`
-	SqsQueue  string `json:"sqs_queue"`
+	SlackTokens []string `json:"slacktokens"`
+	StateBucket string   `json:"statebucket"`
+	StateKey    string   `json:"statekey"`
 }
 
-var conf config
-
 func loadConfig() error {
-	if len(os.Args) == 1 {
-		return fmt.Errorf("must provide config file path")
-	}
-	configFile := os.Args[1]
-
-	contents, err := ioutil.ReadFile(configFile)
+	cf, err := s3.GetConfigFromEnv(&c)
 	if err != nil {
 		return err
 	}
 
-	return yaml.Unmarshal(contents, &conf)
+	cf.OnError = func(_ *s3.ConfigFile, err error) {
+		fmt.Println(err)
+	}
+	cf.Autoreload(60)
+
+	return nil
 }

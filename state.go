@@ -1,11 +1,11 @@
 package main
 
 import (
-	"io/ioutil"
+	"encoding/json"
 	"time"
 
-	"github.com/ghodss/yaml"
-	"github.com/gin-gonic/gin"
+	"github.com/akerl/go-lambda/s3"
+	"gopkg.in/yaml.v2"
 )
 
 type state struct {
@@ -24,18 +24,25 @@ type stateUpdate struct {
 	Resume   bool `form:"resume" json:"resume"`
 }
 
-func (s *state) ToH() gin.H {
-	return gin.H{
-		"timer":  s.Timer.Format(time.RFC3339),
-		"small":  s.Small,
-		"big":    s.Big,
-		"paused": !s.PauseTime.IsZero(),
-	}
+type serializedState struct {
+	Timer  string `json:"timer"`
+	Small  int    `json:"small"`
+	Big    int    `json:"big"`
+	Paused bool   `json:"paused"`
+}
+
+func (s *state) ToJSON() ([]byte, error) {
+	return json.Marshal(serializedState{
+		Timer:  s.Timer.Format(time.RFC3339),
+		Small:  s.Small,
+		Big:    s.Big,
+		Paused: !s.PauseTime.IsZero(),
+	})
 }
 
 func readState() (state, error) {
 	var s state
-	contents, err := ioutil.ReadFile(conf.StateFile)
+	contents, err := s3.GetObject(c.StateBucket, c.StateKey)
 	if err != nil {
 		return s, err
 	}
@@ -49,7 +56,7 @@ func writeState(s state) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(conf.StateFile, contents, 0600)
+	return s3.PutObject(c.StateBucket, c.StateKey, string(contents))
 }
 
 func checkState() (state, error) {

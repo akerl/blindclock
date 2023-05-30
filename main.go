@@ -3,28 +3,33 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 
-	"github.com/gin-gonic/gin"
+	"github.com/akerl/go-lambda/mux"
+)
+
+var (
+	c *config
+
+	indexRegex   = regexp.MustCompile(`^/$`)
+	faviconRegex = regexp.MustCompile(`^/favicon.ico$`)
+	fontRegex    = regexp.MustCompile(`^/font.ttf$`)
+	stateRegex   = regexp.MustCompile(`^/state$`)
+	defaultRegex = regexp.MustCompile(`^/.*$`)
 )
 
 func main() {
-	err := loadConfig()
-	if err != nil {
+	if err := loadConfig(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	if conf.SqsQueue != "" {
-		go listenOnQueue()
-	}
-
-	router := gin.Default()
-	router.StaticFile("/favicon.ico", "./public/favicon.ico")
-	router.StaticFile("/", "./public/index.html")
-	router.StaticFile("/fonts/Roboto-Thin.ttf", "./public/fonts/Roboto-Thin.ttf")
-	router.GET("/state", getState)
-	router.POST("/state", postState)
-	router.POST("/pause", pause)
-	router.POST("/resume", resume)
-	router.Run(":8080")
+	d := mux.NewDispatcher(
+		mux.NewRoute(indexRegex, indexHandler),
+		mux.NewRoute(faviconRegex, faviconHandler),
+		mux.NewRoute(fontRegex, fontHandler),
+		mux.NewRoute(stateRegex, stateHandler),
+		mux.NewRoute(defaultRegex, defaultHandler),
+	)
+	mux.Start(d)
 }
