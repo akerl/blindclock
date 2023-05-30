@@ -185,7 +185,6 @@ func listenOnQueue() {
 		},
 		QueueUrl:            queueURL,
 		MaxNumberOfMessages: 1,
-		VisibilityTimeout:   60,
 	}
 
 	for {
