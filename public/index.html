@@ -5,50 +5,95 @@
     <title>Blind Clock</title>
 </head>
 
+<style>
+@font-face {
+    font-family: Roboto;
+    src: url(fonts/Roboto-Thin.ttf);
+}
+
+body {
+    background-color: #111;
+    color: #fff;
+    font-family: Roboto,sans-serif;
+    margin: 0 10vh;
+    padding: 0;
+    white-space: nowrap;
+    text-align: center;
+    line-height: 50vh;
+}
+
+.row {
+    display: block;
+    height: 50vh;
+    width: 100%;
+    border-bottom: 1px solid #fff;
+}
+
+div.row:last-of-type {
+    border: none;
+}
+
+.column {
+    display: inline-block;
+    width: 45%;
+}
+
+#timer {
+    font-size: 1000%;
+}
+
+#clock, #blinds {
+    font-size: 500%;
+}
+</style>
+
 <body>
+    <div class="row" id="timer"></div>
     <div class="row">
-        <div id="timer"></div>
-    </div>
-    <div class="row">
-        <div class="column">
-            <div id="blinds"></div>
-        </div>
-        <div class="column">
-            <div id="clock"></div>
-        </div>
+        <div class="column" id="blinds"></div>
+        <div class="column" id="clock"></div>
     </div>
 </body>
 
 <script>
 const timerUrl = "/state";
 
-function concatZero(timeFrame) {
-  return timeFrame < 10 ? '0'.concat(timeFrame) : timeFrame
+var timerDate = new Date();
+var smallBlind = 0;
+var bigBlind = 0;
+
+function zeroPad(i){
+    return i < 10 ? '0'.concat(i) : i
+}
+
+function clockString(left, right){
+    return zeroPad(left) + ":" + zeroPad(right)
 }
 
 function updateClock(){
-    const d = new Date();
-    const h = d.getHours();
-    const m = d.getMinutes();
-    document.getElementById("clock").textContent = concatZero(h) + ":" + concatZero(m);
+    const now = new Date();
+
+    var delta = Math.max((timerDate - now) / 1000, 0);
+    var timerMinutes = Math.floor(delta / 60) % 60;
+    delta -= timerMinutes * 60;
+    var timerSeconds = Math.floor(delta);
+
+    document.getElementById("timer").textContent = clockString(timerMinutes, timerSeconds);
+    document.getElementById("clock").textContent = clockString(now.getHours(), now.getMinutes());
+    document.getElementById("blinds").textContent = smallBlind + " / " + bigBlind;
 }
 setInterval(updateClock, 1000);
 
-function updateTimer(){
+function updateState(){
     fetch(timerUrl)
     .then(data => {return data.json()})
     .then(res => {
-        const d = new Date()
-        const t = Date.parse(res.timer);
-        var delta = Math.max((t - d) / 1000, 0);
-        var minutes = Math.floor(delta / 60) % 60;
-        delta -= minutes * 60;
-        var seconds = Math.floor(delta);
-        document.getElementById("timer").textContent = concatZero(minutes) + ":" + concatZero(seconds);
-        document.getElementById("blinds").textContent = res.small + " / " + res.big;
+        timerDate = Date.parse(res.timer);
+        smallBlind = res.small;
+        bigBlind = res.big;
     })
     .catch(error => console.log(error))
 }
-setInterval(updateTimer, 1000);
+setInterval(updateState, 1000);
 </script>
 </html>
