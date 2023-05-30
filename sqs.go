@@ -137,6 +137,9 @@ func listenOnQueue() {
 			fmt.Fprintf(os.Stderr, "receive error: %s", err.Error())
 			continue
 		}
+		if msg == nil {
+			continue
+		}
 
 		if err := sqsUpdate(*msg); err != nil {
 			fmt.Fprintf(os.Stderr, "update error: %s", err.Error())
