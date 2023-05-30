@@ -9,6 +9,17 @@ Display countdown for poker blinds
 
 ## Usage
 
+blindclock reads from a simple config file:
+
+```
+state_file: state.yml
+sqs_queue: blindclock.fifo
+```
+
+The state_file is required. This is the path where the server stores the current timer and blinds.
+
+The sqs_queue is optional. If specified, the server will poll the SQS queue for updated state details. It sources AWS credentials using the default providers, so you'll need to set them via standard AWS SDK environment variables or configuration files.
+
 ## Installation
 
 ```
