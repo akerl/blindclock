@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"time"
 
@@ -20,30 +21,42 @@ func missingHandler(_ events.Request) (events.Response, error) {
 	return events.Respond(404, "resource does not exist")
 }
 
-func staticLookup(req events.Request, path, contentType string) (events.Response, error) {
-	content, err := static.ReadFile(path)
+func indexHandler(req events.Request) (events.Response, error) {
+	content, err := static.ReadFile("assets/index.html")
 	if err != nil {
 		return missingHandler(req)
 	}
 	return events.Response{
 		StatusCode: 200,
 		Body:       string(content),
-		Headers: map[string]string{
-			"Content-Type": contentType,
-		},
+		Headers:    map[string]string{"Content-Type": "text/html; charset=utf-8"},
 	}, nil
 }
 
-func indexHandler(req events.Request) (events.Response, error) {
-	return staticLookup(req, "assets/index.html", "text/html; charset=utf-8")
-}
-
 func faviconHandler(req events.Request) (events.Response, error) {
-	return staticLookup(req, "assets/favicon.ico", "image/x-icon")
+	content, err := static.ReadFile("assets/favicon.ico")
+	if err != nil {
+		return missingHandler(req)
+	}
+	return events.Response{
+		StatusCode:      200,
+		Body:            base64.StdEncoding.EncodeToString(content),
+		Headers:         map[string]string{"Content-Type": "image/x-icon"},
+		IsBase64Encoded: true,
+	}, nil
 }
 
 func fontHandler(req events.Request) (events.Response, error) {
-	return staticLookup(req, "assets/fonts/Roboto-Thin.ttf", "font/ttf")
+	content, err := static.ReadFile("assets/fonts/Roboto-Thin.ttf")
+	if err != nil {
+		return missingHandler(req)
+	}
+	return events.Response{
+		StatusCode:      200,
+		Body:            base64.StdEncoding.EncodeToString(content),
+		Headers:         map[string]string{"Content-Type": "font/ttf"},
+		IsBase64Encoded: true,
+	}, nil
 }
 
 func stateHandler(req events.Request) (events.Response, error) {
