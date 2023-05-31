@@ -1,13 +1,16 @@
-//go:generate resources -output generated.go -declare -var static -fmt -trim assets/ assets/*
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"time"
 
 	"github.com/akerl/go-lambda/apigw/events"
 	"github.com/slack-go/slack"
 )
+
+//go:embed assets/favicon.ico assets/index.html assets/fonts/Roboto-Thin.ttf
+var static embed.FS
 
 func defaultHandler(req events.Request) (events.Response, error) {
 	return events.Redirect("https://"+req.Headers["Host"], 303)
@@ -18,13 +21,13 @@ func missingHandler(_ events.Request) (events.Response, error) {
 }
 
 func staticLookup(req events.Request, path, contentType string) (events.Response, error) {
-	content, found := static.String(path)
-	if !found {
+	content, err := static.ReadFile(path)
+	if err != nil {
 		return missingHandler(req)
 	}
 	return events.Response{
 		StatusCode: 200,
-		Body:       content,
+		Body:       string(content),
 		Headers: map[string]string{
 			"Content-Type": contentType,
 		},
@@ -32,15 +35,15 @@ func staticLookup(req events.Request, path, contentType string) (events.Response
 }
 
 func indexHandler(req events.Request) (events.Response, error) {
-	return staticLookup(req, "/index.html", "text/html; charset=utf-8")
+	return staticLookup(req, "assets/index.html", "text/html; charset=utf-8")
 }
 
 func faviconHandler(req events.Request) (events.Response, error) {
-	return staticLookup(req, "/favicon.ico", "image/x-icon")
+	return staticLookup(req, "assets/favicon.ico", "image/x-icon")
 }
 
 func fontHandler(req events.Request) (events.Response, error) {
-	return staticLookup(req, "/fonts/Roboto-Thin.ttf", "font/ttf")
+	return staticLookup(req, "assets/fonts/Roboto-Thin.ttf", "font/ttf")
 }
 
 func stateHandler(req events.Request) (events.Response, error) {
