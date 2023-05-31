@@ -53,7 +53,7 @@ func fontHandler(req events.Request) (events.Response, error) {
 	}
 	return events.Response{
 		StatusCode:      200,
-		Body:            string(content),
+		Body:            base64.StdEncoding.EncodeToString(content),
 		Headers:         map[string]string{"Content-Type": "font/ttf"},
 		IsBase64Encoded: true,
 	}, nil
