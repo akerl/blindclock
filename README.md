@@ -9,22 +9,25 @@ Display countdown for poker blinds
 
 ## Usage
 
-blindclock reads from a simple config file:
+The Lambda reads from a YAML config file in S3. The file should have the following contents:
 
 ```
-state_file: state.yml
-sqs_queue: blindclock.fifo
+slacktokens:
+- TOKEN_A
+- TOKEN_B
+statebucket: s3-bucket-name
+statekey: state.yml
 ```
 
-The state_file is required. This is the path where the server stores the current timer and blinds.
+Slack tokens should be Slack App signing secrets. They're used to validate that requests came from trusted Slack Apps.
 
-The sqs_queue is optional. If specified, the server will poll the SQS queue for updated state details. It sources AWS credentials using the default providers, so you'll need to set them via standard AWS SDK environment variables or configuration files.
+State bucket and key define where to store the state cache.
 
 ## Installation
 
-```
-go install github.com/akerl/blindclock@latest
-```
+blindclock runs as an AWS Lambda. The most effective starting point for running it is to use [this Terraform module](https://registry.terraform.io/modules/armorfret/lambda-blindclock/aws/latest).
+
+The module creates the necessary S3 buckets. See the Usage section above for the config details.
 
 ## License
 
