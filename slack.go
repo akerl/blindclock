@@ -51,16 +51,16 @@ func slackUpdate(req events.Request) (*slack.Msg, error) { //revive:disable-line
 	case slackUpdateRegex.MatchString(text):
 		match := slackUpdateRegex.FindStringSubmatch(text)
 		switch len(match) {
-		case 1:
-			su.Small, _ = strconv.Atoi(match[0])
-			su.Big = su.Small * 2
 		case 2:
-			su.Small, _ = strconv.Atoi(match[0])
-			su.Big, _ = strconv.Atoi(match[1])
+			su.Small, _ = strconv.Atoi(match[1])
+			su.Big = su.Small * 2
 		case 3:
-			su.Small, _ = strconv.Atoi(match[0])
-			su.Big, _ = strconv.Atoi(match[1])
-			su.Interval, _ = strconv.Atoi(match[2])
+			su.Small, _ = strconv.Atoi(match[1])
+			su.Big, _ = strconv.Atoi(match[2])
+		case 4:
+			su.Small, _ = strconv.Atoi(match[1])
+			su.Big, _ = strconv.Atoi(match[2])
+			su.Interval, _ = strconv.Atoi(match[3])
 		}
 		msg = fmt.Sprintf("Setting blinds to %d / %d", su.Small, su.Big)
 	default:
