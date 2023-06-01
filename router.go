@@ -116,6 +116,20 @@ func slackAuth(req events.Request) (events.Response, error) {
 	return events.Reject("invalid signature")
 }
 
+func slackUserCheck(req events.Request) error {
+	bodyParams, err := req.BodyAsParams()
+	if err != nil {
+		return err
+	}
+	userID := bodyParams["user_id"]
+	for _, i := range c.SlackUsers {
+		if i == userID {
+			return nil
+		}
+	}
+	return fmt.Errorf("unauthorized user")
+}
+
 func parseSlackPost(req events.Request) (stateUpdate, error) {
 	var su stateUpdate
 	bodyParams, err := req.BodyAsParams()
@@ -155,6 +169,10 @@ func parseSlackPost(req events.Request) (stateUpdate, error) {
 func statePost(req events.Request) (events.Response, error) { //revive:disable-line:cyclomatic
 	if resp, err := slackAuth(req); err != nil {
 		return resp, err
+	}
+
+	if err := slackUserCheck(req); err != nil {
+		return events.Fail("unauthorized user")
 	}
 
 	su, err := parseSlackPost(req)

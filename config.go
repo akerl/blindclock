@@ -8,6 +8,7 @@ import (
 
 type config struct {
 	SlackTokens []string `json:"slacktokens"`
+	SlackUsers  []string `json:"slackusers"`
 	StateBucket string   `json:"statebucket"`
 	StateKey    string   `json:"statekey"`
 }
