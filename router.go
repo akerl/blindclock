@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"regexp"
 
 	"github.com/akerl/go-lambda/apigw/events"
@@ -15,7 +16,13 @@ var static embed.FS
 var slackUpdateRegex = regexp.MustCompile(`^(\d+)(?: (\d+))?(?: (\d+))?$`)
 
 func defaultHandler(req events.Request) (events.Response, error) {
-	return events.Redirect("https://"+req.Headers["Host"], 303)
+	//return events.Redirect("https://"+req.Headers["Host"], 303)
+	bodyParams, err := req.BodyAsParams()
+	return events.Response{
+		StatusCode: 200,
+		Body:       fmt.Sprintf("test\n%+v\n", bodyParams),
+		Headers:    map[string]string{"Content-Type": "text/html; charset=utf-8"},
+	}, nil
 }
 
 func indexHandler(_ events.Request) (events.Response, error) {
