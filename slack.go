@@ -58,6 +58,8 @@ func slackUpdate(req events.Request) (*slack.Msg, error) { //revive:disable-line
 		}
 		if match[3] != "" {
 			su.Interval, _ = strconv.Atoi(match[3])
+		} else {
+			su.Interval = -1
 		}
 		msg = fmt.Sprintf("Setting blinds to %d / %d", su.Small, su.Big)
 	default:

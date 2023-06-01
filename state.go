@@ -98,8 +98,10 @@ func updateState(su stateUpdate) error { //revive:disable-line:cyclomatic
 		return nil
 	} else {
 		if su.Interval != 0 {
-			s.Timer = time.Now().Add(time.Minute * time.Duration(su.Interval))
-			s.Interval = su.Interval
+			if su.Interval != -1 {
+				s.Interval = su.Interval
+			}
+			s.Timer = time.Now().Add(time.Minute * time.Duration(s.Interval))
 			s.PauseTime = time.Time{}
 		}
 		if su.Small != 0 {
