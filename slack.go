@@ -21,10 +21,7 @@ func validSlackUser(userID string) bool {
 }
 
 func buildSlackMessage(text string) (*slack.Msg, error) {
-	return &slack.Msg{
-		Text:         text,
-		ResponseType: "in_channel",
-	}, nil
+	return &slack.Msg{Text: text}, nil
 }
 
 func slackUpdate(req events.Request) (*slack.Msg, error) { //revive:disable-line:cyclomatic
