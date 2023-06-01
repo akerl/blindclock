@@ -50,16 +50,13 @@ func slackUpdate(req events.Request) (*slack.Msg, error) { //revive:disable-line
 		msg = "Toggled!"
 	case slackUpdateRegex.MatchString(text):
 		match := slackUpdateRegex.FindStringSubmatch(text)
-		switch len(match) {
-		case 2:
-			su.Small, _ = strconv.Atoi(match[1])
+		su.Small, _ = strconv.Atoi(match[1])
+		if match[2] == "" {
 			su.Big = su.Small * 2
-		case 3:
-			su.Small, _ = strconv.Atoi(match[1])
+		} else {
 			su.Big, _ = strconv.Atoi(match[2])
-		case 4:
-			su.Small, _ = strconv.Atoi(match[1])
-			su.Big, _ = strconv.Atoi(match[2])
+		}
+		if match[3] != "" {
 			su.Interval, _ = strconv.Atoi(match[3])
 		}
 		msg = fmt.Sprintf("Setting blinds to %d / %d", su.Small, su.Big)
