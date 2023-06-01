@@ -11,6 +11,7 @@ type config struct {
 	SlackUsers  []string `json:"slackusers"`
 	StateBucket string   `json:"statebucket"`
 	StateKey    string   `json:"statekey"`
+	AuthTokens  []string `json:"authtokens"`
 }
 
 func loadConfig() error {

@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/akerl/go-lambda/mux"
+	"github.com/akerl/go-lambda/mux/receivers/slack"
 )
 
 var (
@@ -25,6 +26,10 @@ func main() {
 	}
 
 	d := mux.NewDispatcher(
+		&slack.Handler{
+			HandleFunc:    slackUpdate,
+			SigningTokens: c.SlackTokens,
+		},
 		mux.NewRoute(indexRegex, indexHandler),
 		mux.NewRoute(faviconRegex, faviconHandler),
 		mux.NewRoute(fontRegex, fontHandler),

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/akerl/go-lambda/s3"
@@ -79,4 +80,34 @@ func checkState() (state, error) {
 	}
 
 	return s, nil
+}
+
+func updateState(su stateUpdate) error { //revive:disable-line:cyclomatic
+	s, err := readState()
+	if err != nil {
+		return fmt.Errorf("failed to read state")
+	}
+
+	if su.Pause && s.PauseTime.IsZero() {
+		s.PauseTime = time.Now()
+	} else if su.Resume && !s.PauseTime.IsZero() {
+		delta := s.Timer.Sub(s.PauseTime)
+		s.Timer = time.Now().Add(delta)
+		s.PauseTime = time.Time{}
+	} else if su.Pause || su.Resume {
+		return nil
+	} else {
+		if su.Interval != 0 {
+			s.Timer = time.Now().Add(time.Minute * time.Duration(su.Interval))
+			s.Interval = su.Interval
+			s.PauseTime = time.Time{}
+		}
+		if su.Small != 0 {
+			s.Small = su.Small
+		}
+		if su.Big != 0 {
+			s.Big = su.Big
+		}
+	}
+	return writeState(s)
 }
