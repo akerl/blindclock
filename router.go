@@ -4,6 +4,9 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/akerl/go-lambda/apigw/events"
@@ -12,6 +15,8 @@ import (
 
 //go:embed assets/favicon.ico assets/index.html assets/fonts/Roboto-Thin.ttf
 var static embed.FS
+
+var slackUpdateRegex = regexp.MustCompile(`^(\d+)(?: (\d+))?(?: (\d+)?$`)
 
 func defaultHandler(req events.Request) (events.Response, error) {
 	return events.Redirect("https://"+req.Headers["Host"], 303)
@@ -111,14 +116,50 @@ func slackAuth(req events.Request) (events.Response, error) {
 	return events.Reject("invalid signature")
 }
 
+func parseSlackPost(req events.Request) (stateUpdate, error) {
+	var su stateUpdate
+	bodyParams, err := req.BodyAsParams()
+	if err != nil {
+		return su, err
+	}
+	text := bodyParams["text"]
+	switch {
+	case text == "pause":
+		su.Pause = true
+	case text == "resume":
+		su.Resume = true
+	case text == "toggle":
+		su.Resume = true
+		su.Pause = true
+	case slackUpdateRegex.MatchString(text):
+		match := slackUpdateRegex.FindStringSubmatch(text)
+		switch len(match) {
+		case 1:
+			su.Small, _ = strconv.Atoi(match[0])
+			su.Big = su.Small * 2
+		case 2:
+			su.Small, _ = strconv.Atoi(match[0])
+			su.Big, _ = strconv.Atoi(match[1])
+		case 3:
+			su.Small, _ = strconv.Atoi(match[0])
+			su.Big, _ = strconv.Atoi(match[1])
+			su.Interval, _ = strconv.Atoi(match[2])
+		}
+	default:
+		return su, fmt.Errorf("invalid input")
+	}
+
+	return su, nil
+}
+
 func statePost(req events.Request) (events.Response, error) { //revive:disable-line:cyclomatic
 	if resp, err := slackAuth(req); err != nil {
 		return resp, err
 	}
 
-	var su stateUpdate
-	if err := json.Unmarshal([]byte(req.Body), &su); err != nil {
-		return events.Fail("failed to unmarshal")
+	su, err := parseSlackPost(req)
+	if err != nil {
+		return events.Fail("failed to parse")
 	}
 
 	s, err := readState()
