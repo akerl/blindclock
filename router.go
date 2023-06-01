@@ -11,45 +11,52 @@ import (
 //go:embed assets/favicon.ico assets/index.html assets/fonts/Roboto-Thin.ttf
 var static embed.FS
 
+type fileData struct {
+	Path   string
+	Type   string
+	Binary bool
+}
+
+var fd = map[string]fileData{
+	"/": fileData{
+		Path: "assets/index.html",
+		Type: "text/html; charset=utf-8",
+	},
+	"/favicon.ico": fileData{
+		Path:   "assets/favicon.ico",
+		Type:   "image/x-icon",
+		Binary: true,
+	},
+	"/font.ttf": fileData{
+		Path:   "assets/fonts/Roboto-Thin.ttf",
+		Type:   "font/ttf",
+		Binary: true,
+	},
+}
+
 func defaultHandler(req events.Request) (events.Response, error) {
-	return events.Redirect("https://"+req.Headers["Host"], 303)
-}
+	data, ok := fd[req.Path]
+	if !ok {
+		return events.Redirect("https://"+req.Headers["Host"], 303)
+	}
 
-func indexHandler(_ events.Request) (events.Response, error) {
-	content, err := static.ReadFile("assets/index.html")
+	content, err := static.ReadFile(data.Path)
 	if err != nil {
 		return events.Fail("failed to load content")
 	}
-	return events.Response{
-		StatusCode: 200,
-		Body:       string(content),
-		Headers:    map[string]string{"Content-Type": "text/html; charset=utf-8"},
-	}, nil
-}
 
-func faviconHandler(_ events.Request) (events.Response, error) {
-	content, err := static.ReadFile("assets/favicon.ico")
-	if err != nil {
-		return events.Fail("failed to load content")
+	var body string
+	if data.Binary {
+		body = base64.StdEncoding.EncodeToString(content)
+	} else {
+		body = string(content)
 	}
+
 	return events.Response{
 		StatusCode:      200,
-		Body:            base64.StdEncoding.EncodeToString(content),
-		Headers:         map[string]string{"Content-Type": "image/x-icon"},
-		IsBase64Encoded: true,
-	}, nil
-}
-
-func fontHandler(_ events.Request) (events.Response, error) {
-	content, err := static.ReadFile("assets/fonts/Roboto-Thin.ttf")
-	if err != nil {
-		return events.Fail("failed to load content")
-	}
-	return events.Response{
-		StatusCode:      200,
-		Body:            base64.StdEncoding.EncodeToString(content),
-		Headers:         map[string]string{"Content-Type": "font/ttf"},
-		IsBase64Encoded: true,
+		Body:            body,
+		Headers:         map[string]string{"Content-Type": data.Type},
+		IsBase64Encoded: data.Binary,
 	}, nil
 }
 
@@ -76,9 +83,7 @@ func stateGet(_ events.Request) (events.Response, error) {
 	return events.Response{
 		StatusCode: 200,
 		Body:       string(body),
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
+		Headers:    map[string]string{"Content-Type": "application/json"},
 	}, nil
 }
 
