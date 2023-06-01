@@ -1,11 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"regexp"
 	"strconv"
 
 	"github.com/akerl/go-lambda/apigw/events"
 	"github.com/slack-go/slack"
 )
+
+var slackUpdateRegex = regexp.MustCompile(`^(\d+)(?: (\d+))?(?: (\d+))?$`)
 
 func validSlackUser(userID string) bool {
 	for _, i := range c.SlackUsers {
@@ -35,14 +39,18 @@ func slackUpdate(req events.Request) (*slack.Msg, error) { //revive:disable-line
 
 	var su stateUpdate
 	text := bodyParams["text"]
+	var msg string
 	switch {
 	case text == "pause":
 		su.Pause = true
+		msg = "Paused!"
 	case text == "resume":
 		su.Resume = true
+		msg = "Resumed!"
 	case text == "toggle":
 		su.Resume = true
 		su.Pause = true
+		msg = "Toggled!"
 	case slackUpdateRegex.MatchString(text):
 		match := slackUpdateRegex.FindStringSubmatch(text)
 		switch len(match) {
@@ -57,6 +65,7 @@ func slackUpdate(req events.Request) (*slack.Msg, error) { //revive:disable-line
 			su.Big, _ = strconv.Atoi(match[1])
 			su.Interval, _ = strconv.Atoi(match[2])
 		}
+		msg = fmt.Sprintf("Setting blinds to %d / %d", su.Small, su.Big)
 	default:
 		return buildSlackMessage("invalid input")
 	}
@@ -64,5 +73,5 @@ func slackUpdate(req events.Request) (*slack.Msg, error) { //revive:disable-line
 	if err := updateState(su); err != nil {
 		return buildSlackMessage("state update failed")
 	}
-	return buildSlackMessage("")
+	return buildSlackMessage(msg)
 }
