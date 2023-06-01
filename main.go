@@ -15,9 +15,6 @@ var (
 	indexRegex   = regexp.MustCompile(`^/$`)
 	faviconRegex = regexp.MustCompile(`^/favicon.ico$`)
 	fontRegex    = regexp.MustCompile(`^/font.ttf$`)
-	moneyRegex   = regexp.MustCompile(`^/money.svg$`)
-	clockRegex   = regexp.MustCompile(`^/clock.svg$`)
-	timerRegex   = regexp.MustCompile(`^/timer.svg$`)
 	stateRegex   = regexp.MustCompile(`^/state$`)
 	defaultRegex = regexp.MustCompile(`^/.*$`)
 )
@@ -36,9 +33,6 @@ func main() {
 		mux.NewRoute(indexRegex, indexHandler),
 		mux.NewRoute(faviconRegex, faviconHandler),
 		mux.NewRoute(fontRegex, fontHandler),
-		mux.NewRoute(moneyRegex, moneyHandler),
-		mux.NewRoute(clockRegex, clockHandler),
-		mux.NewRoute(timerRegex, timerHandler),
 		mux.NewRoute(stateRegex, stateHandler),
 		mux.NewRoute(defaultRegex, defaultHandler),
 	)
