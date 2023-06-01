@@ -18,6 +18,13 @@ var slackUpdateRegex = regexp.MustCompile(`^(\d+)(?: (\d+))?(?: (\d+))?$`)
 func defaultHandler(req events.Request) (events.Response, error) {
 	//return events.Redirect("https://"+req.Headers["Host"], 303)
 	bodyParams, err := req.BodyAsParams()
+	if err != nil {
+		return events.Response{
+			StatusCode: 200,
+			Body:       err.Error(),
+			Headers:    map[string]string{"Content-Type": "text/html; charset=utf-8"},
+		}, nil
+	}
 	return events.Response{
 		StatusCode: 200,
 		Body:       fmt.Sprintf("test\n%+v\n", bodyParams),
