@@ -4,29 +4,16 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 
 	"github.com/akerl/go-lambda/apigw/events"
 )
 
 //go:embed assets/favicon.ico assets/index.html assets/fonts/Roboto-Thin.ttf
+//go:embed assets/images/money.svg assets/images/clock.svg assets/images/timer.svg
 var static embed.FS
 
 func defaultHandler(req events.Request) (events.Response, error) {
-	//return events.Redirect("https://"+req.Headers["Host"], 303)
-	bodyParams, err := req.BodyAsParams()
-	if err != nil {
-		return events.Response{
-			StatusCode: 200,
-			Body:       err.Error(),
-			Headers:    map[string]string{"Content-Type": "text/html; charset=utf-8"},
-		}, nil
-	}
-	return events.Response{
-		StatusCode: 200,
-		Body:       fmt.Sprintf("test\n%+v\n", bodyParams),
-		Headers:    map[string]string{"Content-Type": "text/html; charset=utf-8"},
-	}, nil
+	return events.Redirect("https://"+req.Headers["Host"], 303)
 }
 
 func indexHandler(_ events.Request) (events.Response, error) {
@@ -64,6 +51,41 @@ func fontHandler(_ events.Request) (events.Response, error) {
 		Body:            base64.StdEncoding.EncodeToString(content),
 		Headers:         map[string]string{"Content-Type": "font/ttf"},
 		IsBase64Encoded: true,
+	}, nil
+}
+
+func moneyHandler(_ events.Request) (events.Response, error) {
+	content, err := static.ReadFile("assets/images/money.svg")
+	if err != nil {
+		return events.Fail("failed to load content")
+	}
+	return events.Response{
+		StatusCode: 200,
+		Body:       string(content),
+		Headers:    map[string]string{"Content-Type": "image/svg+xml"},
+	}, nil
+}
+
+func clockHandler(_ events.Request) (events.Response, error) {
+	content, err := static.ReadFile("assets/images/clock.svg")
+	if err != nil {
+		return events.Fail("failed to load content")
+	}
+	return events.Response{
+		StatusCode: 200,
+		Body:       string(content),
+		Headers:    map[string]string{"Content-Type": "image/svg+xml"},
+	}, nil
+}
+func timerHandler(_ events.Request) (events.Response, error) {
+	content, err := static.ReadFile("assets/images/timer.svg")
+	if err != nil {
+		return events.Fail("failed to load content")
+	}
+	return events.Response{
+		StatusCode: 200,
+		Body:       string(content),
+		Headers:    map[string]string{"Content-Type": "image/svg+xml"},
 	}, nil
 }
 
