@@ -16,7 +16,7 @@ import (
 //go:embed assets/favicon.ico assets/index.html assets/fonts/Roboto-Thin.ttf
 var static embed.FS
 
-var slackUpdateRegex = regexp.MustCompile(`^(\d+)(?: (\d+))?(?: (\d+)?$`)
+var slackUpdateRegex = regexp.MustCompile(`^(\d+)(?: (\d+))?(?: (\d+))?$`)
 
 func defaultHandler(req events.Request) (events.Response, error) {
 	return events.Redirect("https://"+req.Headers["Host"], 303)
