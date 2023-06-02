@@ -76,7 +76,7 @@ func stateGet(_ events.Request) (events.Response, error) {
 	if err != nil {
 		return events.Fail(err.Error())
 	}
-	body, err := json.Marshal(s)
+	body, err := s.ToJSON()
 	if err != nil {
 		return events.Fail(err.Error())
 	}
