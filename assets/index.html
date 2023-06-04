@@ -61,6 +61,11 @@ const timerUrl = "/state";
 var timerDate = new Date();
 var smallBlind = 0;
 var bigBlind = 0;
+var paused = false;
+
+var timer = document.getElementById("timer");
+var clock = document.getElementById("clock");
+var blinds = document.getElementById("blinds");
 
 function zeroPad(i){
     return i < 10 ? '0'.concat(i) : i
@@ -78,9 +83,10 @@ function updateClock(){
     delta -= timerMinutes * 60;
     var timerSeconds = Math.floor(delta);
 
-    document.getElementById("timer").textContent = clockString(timerMinutes, timerSeconds);
-    document.getElementById("clock").textContent = clockString(now.getHours(), now.getMinutes());
-    document.getElementById("blinds").textContent = smallBlind + " / " + bigBlind;
+    timer.style.color = paused ? "red" : "white";
+    timer.textContent = clockString(timerMinutes, timerSeconds);
+    clock.textContent = clockString(now.getHours(), now.getMinutes());
+    blinds.textContent = smallBlind + " / " + bigBlind;
 }
 setInterval(updateClock, 1000);
 
@@ -91,6 +97,7 @@ function updateState(){
         timerDate = Date.parse(res.timer);
         smallBlind = res.small;
         bigBlind = res.big;
+        paused = res.paused;
     })
     .catch(error => console.log(error))
 }
