@@ -4,7 +4,6 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 
 	"github.com/akerl/go-lambda/apigw/events"
 )
@@ -102,9 +101,14 @@ func statePost(req events.Request) (events.Response, error) {
 		return events.Fail("unauthorized")
 	}
 
+	body, err := req.DecodedBody()
+	if err != nil {
+		return events.Fail("failed to decode body")
+	}
+
 	var su stateUpdate
-	if err := json.Unmarshal([]byte(req.Body), &su); err != nil {
-		return events.Fail(fmt.Sprintf("failed to unmarshal / %s / %s", req.Body, err.Error()))
+	if err := json.Unmarshal([]byte(body), &su); err != nil {
+		return events.Fail("failed to unmarshal")
 	}
 
 	if err := updateState(su); err != nil {
