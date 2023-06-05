@@ -100,6 +100,7 @@ func validAuthToken(token string) bool {
 }
 
 func statePost(req events.Request) (events.Response, error) {
+	fmt.Printf("%+v\n", req.Headers)
 	if !validAuthToken(req.Headers["X-API-Key"]) {
 		return events.Fail("unauthorized")
 	}
