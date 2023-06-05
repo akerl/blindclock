@@ -9,6 +9,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const maxBlind = 500_000
+
 type state struct {
 	Timer     time.Time `json:"timer"`
 	Interval  int       `json:"interval"`
@@ -70,9 +72,13 @@ func checkState() (state, error) {
 		delta := s.Timer.Sub(s.PauseTime)
 		s.Timer = time.Now().Add(delta)
 	} else if s.Timer.Before(time.Now()) {
-		s.Timer = time.Now().Add(time.Minute * time.Duration(s.Interval))
 		s.Small = s.Small * 2
 		s.Big = s.Big * 2
+		if s.Big > maxBlind {
+			s.Small = 25
+			s.Big = 50
+		}
+		s.Timer = time.Now().Add(time.Minute * time.Duration(s.Interval))
 		err = writeState(s)
 		if err != nil {
 			return s, err
