@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
 	"github.com/akerl/go-lambda/apigw/events"
 )
@@ -88,7 +89,9 @@ func stateGet(_ events.Request) (events.Response, error) {
 }
 
 func validAuthToken(token string) bool {
+	fmt.Printf("checking %s\n", token)
 	for _, i := range c.AuthTokens {
+		fmt.Printf("comparing against %s\n", i)
 		if i == token {
 			return true
 		}
