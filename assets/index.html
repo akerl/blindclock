@@ -15,18 +15,17 @@ body {
     background-color: #111;
     color: #fff;
     font-family: Roboto,sans-serif;
-    margin: 0 10vh;
+    margin: 5vh 10vh;
     padding: 0;
     white-space: nowrap;
     text-align: center;
-    line-height: 50vh;
+    line-height: 45vh;
 }
 
 .row {
     display: block;
-    height: 50vh;
-    width: 100%;
     border-bottom: 1px solid #fff;
+    box-sizing: border-box;
 }
 
 div.row:last-of-type {
@@ -34,11 +33,10 @@ div.row:last-of-type {
 }
 
 .column {
-    display: inline-block;
+    float: left;
     width: 50%;
-    line-height: 40vh;
-    height: 40vh;
     border-right: 1px solid #fff;
+    box-sizing: border-box;
 }
 
 div.column:last-of-type {
@@ -46,7 +44,7 @@ div.column:last-of-type {
 }
 
 #blinds {
-    font-size: 12vw;
+    font-size: 14vw;
 }
 
 #clock, #timer {
@@ -93,7 +91,7 @@ function updateClock(){
     timer.style.color = paused ? "red" : "white";
     timer.textContent = clockString(timerMinutes, timerSeconds);
     clock.textContent = clockString(now.getHours(), now.getMinutes());
-    blinds.textContent = smallBlind + " / " + bigBlind;
+    blinds.textContent = smallBlind.toLocaleString() + " / " + bigBlind.toLocaleString();
 }
 setInterval(updateClock, 1000);
 

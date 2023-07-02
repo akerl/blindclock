@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const maxBlind = 500_000
+const maxBlind = 99_999
 
 type state struct {
 	Timer     time.Time `json:"timer"`
