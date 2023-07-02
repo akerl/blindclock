@@ -36,21 +36,26 @@ div.row:last-of-type {
 .column {
     display: inline-block;
     width: 45%;
+    border-right: 1px solid #fff;
 }
 
-#timer {
-    font-size: 14vw;
+div.column:last-of-type {
+    border: none;
 }
 
-#clock, #blinds {
-    font-size: 8vw;
+#blinds {
+    font-size: 12vw;
+}
+
+#clock, #timer {
+    font-size: 10vw;
 }
 </style>
 
 <body>
-    <div class="row" id="timer"></div>
+    <div class="row" id="blinds"></div>
     <div class="row">
-        <div class="column" id="blinds"></div>
+        <div class="column" id="timer"></div>
         <div class="column" id="clock"></div>
     </div>
 </body>
