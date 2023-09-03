@@ -3,8 +3,8 @@ module github.com/akerl/blindclock
 go 1.20
 
 require (
-	github.com/akerl/go-lambda v0.4.0
-	github.com/slack-go/slack v0.12.2
+	github.com/akerl/go-lambda v0.6.0
+	github.com/slack-go/slack v0.12.3
 	gopkg.in/yaml.v2 v2.4.0
 )
 
